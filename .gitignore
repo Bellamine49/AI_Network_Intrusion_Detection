@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.joblib
+.ipynb_checkpoints/
+.vscode/
+.env
+data/processed/
+models/
+results/
+*.csv
+!data/raw/*.csv
