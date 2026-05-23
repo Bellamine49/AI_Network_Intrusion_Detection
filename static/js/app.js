@@ -455,59 +455,74 @@ function renderEDAClustering() {
 /* ==================================================================
    PIPELINE RUNNER
    ================================================================== */
+function startPipeline(step) {
+    return new Promise((resolve) => {
+        const btn = document.getElementById('btn-' + step);
+        if (btn) { btn.dataset.origHtml = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...'; }
+
+        fetch('/api/pipeline/' + step, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+        .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+        .then(data => {
+            if (!data || !data.task_id) { throw new Error('No task_id'); }
+            const taskId = data.task_id;
+            const progressEl = document.getElementById('pipeline-progress');
+            const progressFill = document.getElementById('pipeline-progress-fill');
+            const progressText = document.getElementById('pipeline-progress-text');
+            const startTime = Date.now();
+            progressEl.style.display = 'block';
+            progressFill.style.width = '5%';
+            progressText.textContent = 'Starting ' + step + '...';
+            if (pipelineInterval) clearInterval(pipelineInterval);
+            let count = 0;
+
+            pipelineInterval = setInterval(() => {
+                count++;
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                progressText.textContent = step + ' running... ' + elapsed + 's';
+                progressFill.style.width = Math.min(85, 10 + count * 3) + '%';
+
+                fetch('/api/pipeline/status/' + taskId)
+                .then(r => r.ok ? r.json() : null)
+                .then(status => {
+                    if (!status || status.status === 'running') return;
+                    clearInterval(pipelineInterval);
+                    pipelineInterval = null;
+                    progressFill.style.width = '100%';
+                    progressText.textContent = 'Done!';
+                    setTimeout(() => { progressEl.style.display = 'none'; }, 2000);
+                    if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.origHtml || step; }
+                    if (status.status === 'done') {
+                        toast(step + ' completed!', 'success');
+                        if (status.output) showModal(step + ' Output', status.output);
+                        loadAll();
+                    } else {
+                        toast(step + ' failed', 'error');
+                        showModal(step + ' Failed', status.error || status.output || 'Unknown error');
+                    }
+                    resolve();
+                })
+                .catch(() => { resolve(); });
+            }, 2000);
+        })
+        .catch(err => {
+            console.error('Pipeline start failed:', err);
+            toast('Failed to start ' + step, 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.origHtml || step; }
+            resolve();
+        });
+    });
+}
+
 async function runStep(step) {
     if (step === 'run-all') {
-        await runStep('clean');
-        await runStep('train');
-        await runStep('evaluate');
-        await runStep('knn');
-        await runStep('eda');
-        return;
-    }
-    const btn = document.getElementById('btn-' + step);
-    if (btn) { btn.dataset.origHtml = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...'; }
-
-    const result = await fetchJSON('/api/pipeline/' + step, { method: 'POST' });
-    if (!result || !result.task_id) {
-        toast('Failed to start ' + step, 'error');
-        if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.origHtml || step; }
-        return;
-    }
-
-    const progressEl = document.getElementById('pipeline-progress');
-    const progressFill = document.getElementById('pipeline-progress-fill');
-    const progressText = document.getElementById('pipeline-progress-text');
-    progressEl.style.display = 'block';
-    progressFill.style.width = '0%';
-    progressText.textContent = 'Starting ' + step + '...';
-
-    const taskId = result.task_id;
-    if (pipelineInterval) clearInterval(pipelineInterval);
-    const startTime = Date.now();
-    let count = 0;
-
-    pipelineInterval = setInterval(async () => {
-        count++;
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        progressText.textContent = step + ' running... ' + elapsed + 's';
-        progressFill.style.width = Math.min(85, 10 + count * 5) + '%';
-        const status = await fetchJSON('/api/pipeline/status/' + taskId);
-        if (!status || status.status === 'running') return;
-        clearInterval(pipelineInterval);
-        pipelineInterval = null;
-        progressFill.style.width = '100%';
-        progressText.textContent = 'Done!';
-        setTimeout(() => { progressEl.style.display = 'none'; }, 2000);
-        if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.origHtml || step; }
-        if (status.status === 'done') {
-            toast(step + ' completed!', 'success');
-            if (status.output) showModal(step + ' Output', status.output);
-            loadAll();
-        } else {
-            toast(step + ' failed', 'error');
-            showModal(step + ' Failed', status.error || status.output || 'Unknown error');
+        const steps = ['clean', 'train', 'evaluate', 'knn', 'eda'];
+        for (const s of steps) {
+            await startPipeline(s);
         }
-    }, 2000);
+        toast('Full pipeline completed!', 'success');
+        return;
+    }
+    await startPipeline(step);
 }
 
 /* ===== UTILITY ===== */
