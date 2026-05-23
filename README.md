@@ -29,7 +29,7 @@ python src/04_model_evaluation.py
 python src/06_knn_comparison.py
 
 # Launch dashboard
-python src/dashboard.py
+python dashboard.py
 # Open http://localhost:5000
 ```
 
