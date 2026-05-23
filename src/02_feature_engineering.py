@@ -7,6 +7,7 @@ def engineer_features(input_path, output_path):
     print("STEP 2: FEATURE ENGINEERING")
     print("=" * 50)
 
+    input_path, output_path = str(input_path), str(output_path)
     df = pd.read_csv(input_path)
     print(f"Dataset shape: {df.shape}")
 
@@ -59,12 +60,13 @@ def engineer_features(input_path, output_path):
     else:
         print("No missing values in selected features")
 
-    X.to_csv(output_path.replace('.csv', '_features.csv'), index=False)
-    y.to_csv(output_path.replace('.csv', '_target.csv'), index=False)
+    output_str = str(output_path)
+    X.to_csv(output_str.replace('.csv', '_features.csv'), index=False)
+    y.to_csv(output_str.replace('.csv', '_target.csv'), index=False)
 
     df_combined = X.copy()
     df_combined['Label'] = y
-    df_combined.to_csv(output_path, index=False)
+    df_combined.to_csv(output_str, index=False)
 
     print(f"Features shape: {X.shape}")
     print(f"Target shape: {y.shape}")
@@ -88,8 +90,9 @@ def engineer_features(input_path, output_path):
     return X, y
 
 if __name__ == "__main__":
-    INPUT_PATH = "../data/processed/cleaned_data.csv"
-    OUTPUT_PATH = "../data/processed/engineered_features.csv"
-    Path("../data/processed").mkdir(parents=True, exist_ok=True)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    INPUT_PATH = BASE_DIR / "data/processed/cleaned_data.csv"
+    OUTPUT_PATH = BASE_DIR / "data/processed/engineered_features.csv"
+    Path(BASE_DIR / "data/processed").mkdir(parents=True, exist_ok=True)
     X, y = engineer_features(INPUT_PATH, OUTPUT_PATH)
     print("\nFeature engineering completed successfully!")

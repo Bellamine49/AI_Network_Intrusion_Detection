@@ -18,6 +18,8 @@ def compare_models(X_path, y_path, output_path):
     print("Both algorithms studied in class")
     print("=" * 50)
 
+    X_path, y_path = str(X_path), str(y_path)
+    output_path = str(output_path)
     X = pd.read_csv(X_path)
     y = pd.read_csv(y_path).squeeze()
 
@@ -124,9 +126,10 @@ def compare_models(X_path, y_path, output_path):
     return results_df
 
 if __name__ == "__main__":
-    X_PATH = "../data/processed/engineered_features_features.csv"
-    Y_PATH = "../data/processed/engineered_features_target.csv"
-    OUTPUT_PATH = "../results/model_comparison.csv"
-    Path("../results").mkdir(parents=True, exist_ok=True)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    X_PATH = BASE_DIR / "data/processed/engineered_features_features.csv"
+    Y_PATH = BASE_DIR / "data/processed/engineered_features_target.csv"
+    OUTPUT_PATH = BASE_DIR / "results/model_comparison.csv"
+    Path(BASE_DIR / "results").mkdir(parents=True, exist_ok=True)
     results = compare_models(X_PATH, Y_PATH, OUTPUT_PATH)
     print("\nModel comparison completed!")

@@ -11,12 +11,13 @@ def create_dashboard():
     print("STEP 5: CREATING DASHBOARD")
     print("=" * 50)
 
+    BASE_DIR = Path(__file__).resolve().parent.parent
     app = Flask(__name__)
 
-    MODEL_PATH = "../models/decision_tree_model.joblib"
-    X_TEST_PATH = "../data/processed/engineered_features_features.csv"
-    Y_TEST_PATH = "../data/processed/engineered_features_target.csv"
-    METRICS_PATH = "../results/evaluation_report.json"
+    MODEL_PATH = str(BASE_DIR / "models/decision_tree_model.joblib")
+    X_TEST_PATH = str(BASE_DIR / "data/processed/engineered_features_features.csv")
+    Y_TEST_PATH = str(BASE_DIR / "data/processed/engineered_features_target.csv")
+    METRICS_PATH = str(BASE_DIR / "results/evaluation_report.json")
 
     if not os.path.exists(MODEL_PATH):
         raise FileNotFoundError(f"Model not found at {MODEL_PATH}. Run training first.")

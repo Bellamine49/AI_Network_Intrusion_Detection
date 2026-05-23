@@ -10,6 +10,8 @@ def evaluate_model(model_path, X_test_path, y_test_path, output_path):
     print("STEP 4: MODEL EVALUATION")
     print("=" * 50)
 
+    model_path, output_path = str(model_path), str(output_path)
+    X_test_path, y_test_path = str(X_test_path), str(y_test_path)
     model = joblib.load(model_path)
     X_test = pd.read_csv(X_test_path)
     y_test = pd.read_csv(y_test_path).squeeze()
@@ -49,8 +51,6 @@ def evaluate_model(model_path, X_test_path, y_test_path, output_path):
     print(f"  - {(1-precision)*100:.1f}% of alerts are false positives (investigation needed)")
     print(f"  - We catch {recall:.1%} of all actual attacks")
     print(f"  - {fnr*100:.1f}% of attacks go undetected (false negatives)")
-
-    Path("../results").mkdir(parents=True, exist_ok=True)
 
     report = {
         "model_info": {
@@ -106,12 +106,13 @@ def evaluate_model(model_path, X_test_path, y_test_path, output_path):
     return report
 
 if __name__ == "__main__":
-    MODEL_PATH = "../models/decision_tree_model.joblib"
-    X_TEST_PATH = "../data/processed/engineered_features_features.csv"
-    Y_TEST_PATH = "../data/processed/engineered_features_target.csv"
-    OUTPUT_PATH = "../results/evaluation_report.txt"
-    Path("../models").mkdir(parents=True, exist_ok=True)
-    Path("../results").mkdir(parents=True, exist_ok=True)
-    Path("../data/processed").mkdir(parents=True, exist_ok=True)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    MODEL_PATH = BASE_DIR / "models/decision_tree_model.joblib"
+    X_TEST_PATH = BASE_DIR / "data/processed/engineered_features_features.csv"
+    Y_TEST_PATH = BASE_DIR / "data/processed/engineered_features_target.csv"
+    OUTPUT_PATH = BASE_DIR / "results/evaluation_report.txt"
+    Path(BASE_DIR / "models").mkdir(parents=True, exist_ok=True)
+    Path(BASE_DIR / "results").mkdir(parents=True, exist_ok=True)
+    Path(BASE_DIR / "data/processed").mkdir(parents=True, exist_ok=True)
     results = evaluate_model(MODEL_PATH, X_TEST_PATH, Y_TEST_PATH, OUTPUT_PATH)
     print("\nModel evaluation completed successfully!")

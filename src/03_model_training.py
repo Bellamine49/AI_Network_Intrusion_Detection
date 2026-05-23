@@ -12,6 +12,9 @@ def train_decision_tree(X_path, y_path, model_output_path, plot_output_path=None
     print("STEP 3: MODEL TRAINING (DECISION TREE)")
     print("=" * 50)
 
+    X_path, y_path = str(X_path), str(y_path)
+    model_output_path = str(model_output_path)
+    plot_output_path = str(plot_output_path) if plot_output_path else None
     X = pd.read_csv(X_path)
     y = pd.read_csv(y_path).squeeze()
     print(f"Features shape: {X.shape}")
@@ -76,7 +79,6 @@ def train_decision_tree(X_path, y_path, model_output_path, plot_output_path=None
     tree_rules = export_text(clf, feature_names=list(X.columns))
     print(tree_rules)
 
-    Path("../models").mkdir(parents=True, exist_ok=True)
     joblib.dump(clf, model_output_path)
     print(f"Model saved to {model_output_path}")
 
@@ -86,7 +88,7 @@ def train_decision_tree(X_path, y_path, model_output_path, plot_output_path=None
                   class_names=['Normal', 'Attack'],
                   filled=True, rounded=True, fontsize=10)
         plt.title("Decision Tree for Network Intrusion Detection (max_depth=3)")
-        Path("../results").mkdir(parents=True, exist_ok=True)
+        Path(plot_output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(plot_output_path, bbox_inches='tight', dpi=300)
         plt.close()
         print(f"Decision tree plot saved to {plot_output_path}")
@@ -94,12 +96,13 @@ def train_decision_tree(X_path, y_path, model_output_path, plot_output_path=None
     return clf, X_test, y_test, y_test_pred
 
 if __name__ == "__main__":
-    X_PATH = "../data/processed/engineered_features_features.csv"
-    Y_PATH = "../data/processed/engineered_features_target.csv"
-    MODEL_OUTPUT_PATH = "../models/decision_tree_model.joblib"
-    PLOT_OUTPUT_PATH = "../results/decision_tree_plot.png"
-    Path("../models").mkdir(parents=True, exist_ok=True)
-    Path("../results").mkdir(parents=True, exist_ok=True)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    X_PATH = BASE_DIR / "data/processed/engineered_features_features.csv"
+    Y_PATH = BASE_DIR / "data/processed/engineered_features_target.csv"
+    MODEL_OUTPUT_PATH = BASE_DIR / "models/decision_tree_model.joblib"
+    PLOT_OUTPUT_PATH = BASE_DIR / "results/decision_tree_plot.png"
+    Path(BASE_DIR / "models").mkdir(parents=True, exist_ok=True)
+    Path(BASE_DIR / "results").mkdir(parents=True, exist_ok=True)
     model, X_test, y_test, y_test_pred = train_decision_tree(
         X_PATH, Y_PATH, MODEL_OUTPUT_PATH, PLOT_OUTPUT_PATH
     )

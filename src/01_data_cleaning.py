@@ -49,8 +49,9 @@ def load_and_clean_data(input_path, output_path):
     return df
 
 if __name__ == "__main__":
-    INPUT_PATH = "../data/raw/final_project_data.csv"
-    OUTPUT_PATH = "../data/processed/cleaned_data.csv"
-    Path("../data/processed").mkdir(parents=True, exist_ok=True)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    INPUT_PATH = BASE_DIR / "data/raw/final_project_data.csv"
+    OUTPUT_PATH = BASE_DIR / "data/processed/cleaned_data.csv"
+    Path(BASE_DIR / "data/processed").mkdir(parents=True, exist_ok=True)
     cleaned_df = load_and_clean_data(INPUT_PATH, OUTPUT_PATH)
     print("\nData cleaning completed successfully!")

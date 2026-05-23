@@ -9,4 +9,4 @@ data/processed/
 models/
 results/
 *.csv
-!data/raw/*.csv
+!data/raw/final_project_data.csv
