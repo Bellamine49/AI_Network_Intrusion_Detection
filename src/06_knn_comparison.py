@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import json
 import matplotlib.pyplot as plt
 
 def compare_models(X_path, y_path, output_path):
@@ -125,6 +126,25 @@ def compare_models(X_path, y_path, output_path):
 
     return results_df
 
+def save_comparison_json(results_df, output_path):
+    data = {"models": []}
+    for _, row in results_df.iterrows():
+        data["models"].append({
+            "name": row["Model"],
+            "metrics": {
+                "accuracy": float(row["Accuracy"]),
+                "precision": float(row["Precision"]),
+                "recall": float(row["Recall"]),
+                "f1_score": float(row["F1-Score"]),
+                "false_positives": int(row["False Positives"]),
+                "false_negatives": int(row["False Negatives"]),
+            }
+        })
+    json_path = str(output_path).replace('.csv', '.json')
+    with open(json_path, 'w') as f:
+        json.dump(data, f, indent=2)
+    print(f"Comparison JSON saved to {json_path}")
+
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent
     X_PATH = BASE_DIR / "data/processed/engineered_features_features.csv"
@@ -132,4 +152,5 @@ if __name__ == "__main__":
     OUTPUT_PATH = BASE_DIR / "results/model_comparison.csv"
     Path(BASE_DIR / "results").mkdir(parents=True, exist_ok=True)
     results = compare_models(X_PATH, Y_PATH, OUTPUT_PATH)
+    save_comparison_json(results, OUTPUT_PATH)
     print("\nModel comparison completed!")
