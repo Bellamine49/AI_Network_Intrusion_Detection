@@ -46,65 +46,60 @@ function closeModal() {
 
 function formatPipelineOutput(text) {
     const lines = text.split('\n');
-    let html = '<div style="font-family:Inter,sans-serif;">';
-    let inMetricCard = false;
-    let metricLines = [];
-    for (const line of lines) {
-        const t = line.trim();
-        if (!t) { html += '<div style="height:4px;"></div>'; continue; }
-        // Section header
-        if (/^={2,}/.test(t)) {
-            if (inMetricCard) { html += renderMetricCards(metricLines); metricLines = []; inMetricCard = false; }
+    let blocks = [];       // [{type:'section'|'metric'|'code'|'empty', content:...}]
+    let currentBlock = null;
+    function flush() { if (currentBlock) { blocks.push(currentBlock); currentBlock = null; } }
+    for (let line of lines) {
+        const t = line.trimEnd();
+        // Section divider
+        if (/^={3,}\s*$/.test(t)) { flush(); continue; }
+        // Section header (text between === markers)
+        if (/^={3,}\s*.+\s*={3,}$/.test(t) || /^={3,}\s*.+$/.test(t)) {
+            flush();
             const title = t.replace(/^=+\s*/, '').replace(/\s*=+$/, '').trim();
-            if (title) html += '<div class="rc-hero" style="padding:10px 0 6px;border:none;margin:0;"><div class="rc-hero-title" style="font-size:0.85rem;">' + esc(title) + '</div></div>';
+            if (title) blocks.push({ type: 'section', content: title });
             continue;
         }
-        // Metric line like "Accuracy: 0.9923"
-        if (/^[A-Za-z].*:\s*[\d.]+/.test(t) && !t.includes('=') && !t.includes('|')) {
-            metricLines.push(t);
-            inMetricCard = true;
+        // Empty line
+        if (!t) { flush(); blocks.push({ type: 'empty' }); continue; }
+        // Metric — "key: 0.xxxx" or "key: xxxx%"
+        if (/^[A-Za-z].*:\s*[\d.]+%?$/.test(t) && !t.includes('{') && !t.includes('|')) {
+            if (currentBlock && currentBlock.type === 'metric') { currentBlock.content.push(t); }
+            else { flush(); currentBlock = { type: 'metric', content: [t] }; }
             continue;
         }
-        if (inMetricCard) { html += renderMetricCards(metricLines); metricLines = []; inMetricCard = false; }
-        // File path
-        if (t.match(/\.(csv|png|json|txt|joblib|py)$/i) && t.match(/saved|Saving|to /)) {
-            html += '<div class="rc-body" style="color:var(--accent);font-size:0.68rem;font-family:JetBrains Mono,monospace;">' + esc(t) + '</div>';
-            continue;
-        }
-        // Key-value line
-        if (t.includes(':') && !t.includes('|')) {
-            const parts = t.split(/:\s*/);
-            if (parts.length >= 2) {
-                html += '<div style="display:flex;gap:8px;padding:2px 0;font-size:0.7rem;"><span style="color:var(--text-muted);min-width:100px;">' + esc(parts[0]) + ':</span><span style="color:var(--text-secondary);">' + esc(parts.slice(1).join(': ')) + '</span></div>';
-                continue;
-            }
-        }
-        // Table lines with |
-        if (t.includes('|')) {
-            const cells = t.split('|').map(c => c.trim()).filter(Boolean);
-            if (cells.length >= 2) {
-                html += '<div style="display:flex;gap:4px;padding:1px 0;font-size:0.65rem;font-family:JetBrains Mono,monospace;">' + cells.map(c => '<span style="color:var(--text-secondary);flex:1;">' + esc(c) + '</span>').join('') + '</div>';
-                continue;
-            }
-        }
-        // Default
-        html += '<div style="font-size:0.7rem;color:var(--text-secondary);padding:1px 0;">' + esc(t) + '</div>';
+        // Everything else is code
+        if (currentBlock && currentBlock.type === 'code') { currentBlock.content.push(t); }
+        else { flush(); currentBlock = { type: 'code', content: [t] }; }
     }
-    if (inMetricCard) { html += renderMetricCards(metricLines); }
-    html += '</div>';
-    return html;
-}
+    flush();
 
-function renderMetricCards(lines) {
-    let html = '<div class="metrics-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin:8px 0;">';
-    for (const line of lines) {
-        const match = line.match(/^([^:]+):\s*([\d.]+)/);
-        if (match) {
-            const key = match[1].trim();
-            let val = match[2];
-            const isPct = /rate|ratio|pct|%|f1|accuracy|precision|recall/i.test(key);
-            const displayVal = isPct ? (parseFloat(val) * 100).toFixed(1) + '%' : val;
-            html += '<div class="metric-card"><div class="m-value" style="font-size:1rem;">' + displayVal + '</div><div class="m-label">' + esc(key) + '</div></div>';
+    // Render blocks
+    let html = '<div style="font-family:Inter,sans-serif;">';
+    for (const b of blocks) {
+        if (b.type === 'empty') { html += '<div style="height:4px;"></div>'; }
+        else if (b.type === 'section') {
+            html += '<div class="rc-hero" style="padding:8px 0 4px;border:none;margin:0;text-align:left;">' +
+                    '<div class="rc-hero-title" style="font-size:0.82rem;background:linear-gradient(135deg,var(--accent),#26c6da);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">' +
+                    esc(b.content) + '</div></div>';
+        }
+        else if (b.type === 'metric') {
+            html += '<div class="metrics-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin:6px 0;">';
+            for (const line of b.content) {
+                const m = line.match(/^([^:]+):\s*([\d.]+%?)/);
+                if (m) {
+                    const key = m[1].trim();
+                    let val = m[2];
+                    if (/rate|ratio|pct/i.test(key) && !val.includes('%')) val = (parseFloat(val) * 100).toFixed(1) + '%';
+                    else if (/accuracy|precision|recall|f1/i.test(key) && !val.includes('%') && parseFloat(val) < 1) val = (parseFloat(val) * 100).toFixed(1) + '%';
+                    html += '<div class="metric-card"><div class="m-value" style="font-size:0.95rem;">' + esc(val) + '</div><div class="m-label">' + esc(key) + '</div></div>';
+                }
+            }
+            html += '</div>';
+        }
+        else if (b.type === 'code') {
+            html += '<pre style="background:#070b14;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin:4px 0;font-family:JetBrains Mono,monospace;font-size:0.68rem;color:#78909c;line-height:1.5;white-space:pre-wrap;overflow-x:auto;">' +
+                    esc(b.content.join('\n')) + '</pre>';
         }
     }
     html += '</div>';
