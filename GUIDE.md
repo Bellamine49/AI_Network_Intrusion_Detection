@@ -350,7 +350,7 @@ Actual Attack        FN                 TP
 
 ## 7. STEP 5: DASHBOARD
 
-### File: `src/05_simple_dashboard.py`
+### File: `src/dashboard.py`
 
 ### What this code does:
 Creates a web dashboard using Flask that shows the model's performance, decision rules, feature importance, and sample predictions.

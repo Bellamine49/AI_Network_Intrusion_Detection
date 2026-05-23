@@ -9,7 +9,7 @@ Network intrusion detection using Decision Tree (and KNN comparison) - algorithm
 02_feature_engineering.py ->  Select network features (sbytes, dbytes, sttl, Sload, Dload)
 03_model_training.py     ->  Train Decision Tree (max_depth=3 for explainability)
 04_model_evaluation.py   ->  Evaluate precision, recall, F1, confusion matrix
-05_simple_dashboard.py   ->  Flask dashboard with explanations
+dashboard.py             ->  Flask dashboard with explanations
 06_knn_comparison.py     ->  Compare Decision Tree vs KNN (also studied in class)
 ```
 
@@ -29,7 +29,7 @@ python src/04_model_evaluation.py
 python src/06_knn_comparison.py
 
 # Launch dashboard
-python src/05_simple_dashboard.py
+python src/dashboard.py
 # Open http://localhost:5000
 ```
 
