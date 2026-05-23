@@ -173,6 +173,7 @@
                     <button class="toggle-btn" data-view="boxplots"><i class="fas fa-chart-box"></i> Box Plots</button>
                     <button class="toggle-btn" data-view="pca"><i class="fas fa-compress-alt"></i> PCA</button>
                     <button class="toggle-btn" data-view="clustering"><i class="fas fa-cluster"></i> Clustering</button>
+                    <button class="toggle-btn" data-view="scatter"><i class="fas fa-th-large"></i> Pair Plot</button>
                 </div>
                 <div class="analysis-legend">
                     <span class="filter-count">Classroom EDA — all techniques studied in class</span>
@@ -203,6 +204,10 @@
             <div class="analysis-view" id="eda-view-clustering">
                 <div class="graph-sub">K-Means clustering (k=2, unsupervised) vs true labels + Hierarchical clustering dendrogram</div>
                 <div id="eda-clustering-content"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+            </div>
+            <div class="analysis-view" id="eda-view-scatter">
+                <div class="graph-sub">Scatter Matrix (Pair Plot / Nuage de Points) — 500 sampled rows, colored by class. Shows feature relationships and class separability.</div>
+                <div id="eda-scatter-chart" style="min-height:500px;"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
             </div>
         </div>
 

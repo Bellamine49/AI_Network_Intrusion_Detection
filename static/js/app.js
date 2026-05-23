@@ -30,13 +30,85 @@ function toast(msg, type) {
 }
 
 /* ===== MODAL ===== */
-function showModal(title, body) {
+function showModal(title, bodyText) {
     document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').textContent = body;
+    document.getElementById('modal-body').innerHTML = '<pre style="white-space:pre-wrap;font-family:JetBrains Mono,monospace;font-size:0.72rem;color:#78909c;line-height:1.6;margin:0;">' + esc(bodyText) + '</pre>';
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+function showStyledModal(title, bodyHTML) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').innerHTML = bodyHTML;
     document.getElementById('modal-overlay').style.display = 'flex';
 }
 function closeModal() {
     document.getElementById('modal-overlay').style.display = 'none';
+}
+
+function formatPipelineOutput(text) {
+    const lines = text.split('\n');
+    let html = '<div style="font-family:Inter,sans-serif;">';
+    let inMetricCard = false;
+    let metricLines = [];
+    for (const line of lines) {
+        const t = line.trim();
+        if (!t) { html += '<div style="height:4px;"></div>'; continue; }
+        // Section header
+        if (/^={2,}/.test(t)) {
+            if (inMetricCard) { html += renderMetricCards(metricLines); metricLines = []; inMetricCard = false; }
+            const title = t.replace(/^=+\s*/, '').replace(/\s*=+$/, '').trim();
+            if (title) html += '<div class="rc-hero" style="padding:10px 0 6px;border:none;margin:0;"><div class="rc-hero-title" style="font-size:0.85rem;">' + esc(title) + '</div></div>';
+            continue;
+        }
+        // Metric line like "Accuracy: 0.9923"
+        if (/^[A-Za-z].*:\s*[\d.]+/.test(t) && !t.includes('=') && !t.includes('|')) {
+            metricLines.push(t);
+            inMetricCard = true;
+            continue;
+        }
+        if (inMetricCard) { html += renderMetricCards(metricLines); metricLines = []; inMetricCard = false; }
+        // File path
+        if (t.match(/\.(csv|png|json|txt|joblib|py)$/i) && t.match(/saved|Saving|to /)) {
+            html += '<div class="rc-body" style="color:var(--accent);font-size:0.68rem;font-family:JetBrains Mono,monospace;">' + esc(t) + '</div>';
+            continue;
+        }
+        // Key-value line
+        if (t.includes(':') && !t.includes('|')) {
+            const parts = t.split(/:\s*/);
+            if (parts.length >= 2) {
+                html += '<div style="display:flex;gap:8px;padding:2px 0;font-size:0.7rem;"><span style="color:var(--text-muted);min-width:100px;">' + esc(parts[0]) + ':</span><span style="color:var(--text-secondary);">' + esc(parts.slice(1).join(': ')) + '</span></div>';
+                continue;
+            }
+        }
+        // Table lines with |
+        if (t.includes('|')) {
+            const cells = t.split('|').map(c => c.trim()).filter(Boolean);
+            if (cells.length >= 2) {
+                html += '<div style="display:flex;gap:4px;padding:1px 0;font-size:0.65rem;font-family:JetBrains Mono,monospace;">' + cells.map(c => '<span style="color:var(--text-secondary);flex:1;">' + esc(c) + '</span>').join('') + '</div>';
+                continue;
+            }
+        }
+        // Default
+        html += '<div style="font-size:0.7rem;color:var(--text-secondary);padding:1px 0;">' + esc(t) + '</div>';
+    }
+    if (inMetricCard) { html += renderMetricCards(metricLines); }
+    html += '</div>';
+    return html;
+}
+
+function renderMetricCards(lines) {
+    let html = '<div class="metrics-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin:8px 0;">';
+    for (const line of lines) {
+        const match = line.match(/^([^:]+):\s*([\d.]+)/);
+        if (match) {
+            const key = match[1].trim();
+            let val = match[2];
+            const isPct = /rate|ratio|pct|%|f1|accuracy|precision|recall/i.test(key);
+            const displayVal = isPct ? (parseFloat(val) * 100).toFixed(1) + '%' : val;
+            html += '<div class="metric-card"><div class="m-value" style="font-size:1rem;">' + displayVal + '</div><div class="m-label">' + esc(key) + '</div></div>';
+        }
+    }
+    html += '</div>';
+    return html;
 }
 
 /* ===== TABS ===== */
@@ -72,6 +144,7 @@ function initEDAToggle() {
             if (view === 'boxplots') renderEDABoxplots();
             if (view === 'pca') renderEDAPCA();
             if (view === 'clustering') renderEDAClustering();
+            if (view === 'scatter') renderEDAScatter();
         });
     });
 }
@@ -256,32 +329,74 @@ async function loadEDA() {
 function renderEDAOverview() {
     const el = document.getElementById('eda-overview-content');
     if (!edaData || !edaData.info) { el.innerHTML = '<div class="empty-state">EDA not available. Run EDA step first.</div>'; return; }
+    let html = '';
+
+    // Data Quality Summary
+    const totalNulls = edaData.info.reduce((s, c) => s + c.null_count, 0);
+    const allNumeric = edaData.info.every(c => c.dtype.includes('float') || c.dtype.includes('int'));
+    html += '<div class="toolbar"><span class="filter-count">Data Quality Summary</span></div>' +
+        '<div class="metrics-grid" style="grid-template-columns:repeat(4,1fr);">' +
+        '<div class="metric-card"><div class="m-value" style="color:var(--accent);">' + edaData.info.length + '</div><div class="m-label">Features</div></div>' +
+        '<div class="metric-card"><div class="m-value" style="color:' + (totalNulls === 0 ? 'var(--success)' : 'var(--warning)') + ';">' + totalNulls + '</div><div class="m-label">Missing Values</div></div>' +
+        '<div class="metric-card"><div class="m-value" style="color:var(--success);">' + (allNumeric ? 'Yes' : 'Mixed') + '</div><div class="m-label">All Numeric</div></div>' +
+        '<div class="metric-card"><div class="m-value">UNSW-NB15</div><div class="m-label">Dataset Source</div></div>' +
+        '</div>';
+
+    // Label Encoding explanation
+    html += '<div class="info-box" style="margin:10px 0;">' +
+        '<strong>Label Encoding (Codification)</strong> — The target variable is already binary: <strong>0 = Normal</strong>, <strong>1 = Attack</strong>.<br>' +
+        'No additional LabelEncoder needed. The original dataset had categorical attack types; they were collapsed to binary (attack / no attack) for supervised learning.<br>' +
+        '<span style="color:var(--text-muted);font-size:0.65rem;">If we had categorical features (e.g., protocol type, service), we would use sklearn\'s LabelEncoder to convert them to numeric.</span></div>';
+
     // Column info table
-    let html = '<div class="toolbar"><span class="filter-count">Column Information (df.info())</span></div>' +
-        '<div class="table-wrap" style="max-height:180px;overflow-y:auto;"><table><thead><tr><th>Column</th><th>Dtype</th><th>Non-Null</th><th>Nulls</th></tr></thead><tbody>' +
-        edaData.info.map(c => '<tr><td>' + esc(c.column) + '</td><td>' + esc(c.dtype) + '</td><td>' + c.non_null.toLocaleString() + '</td><td>' + c.null_count + '</td></tr>').join('') +
+    html += '<div class="toolbar"><span class="filter-count">Column Information (df.info())</span></div>' +
+        '<div class="table-wrap" style="max-height:160px;overflow-y:auto;"><table><thead><tr><th>#</th><th>Column</th><th>Dtype</th><th>Non-Null</th><th>Nulls</th><th>Network Meaning</th></tr></thead><tbody>' +
+        edaData.info.map((c, i) => {
+            const meanings = {
+                'sttl': 'Source→Destination TTL (time-to-live)',
+                'sbytes': 'Source bytes transferred',
+                'dbytes': 'Destination bytes transferred',
+                'Sload': 'Source load (bits/sec)',
+                'Dload': 'Destination load (bits/sec)',
+            };
+            return '<tr><td>' + (i + 1) + '</td><td><strong>' + esc(c.column) + '</strong></td><td>' + esc(c.dtype) + '</td><td>' + c.non_null.toLocaleString() + '</td><td>' + c.null_count + '</td><td style="color:var(--text-muted);font-size:0.62rem;">' + (meanings[c.column] || '—') + '</td></tr>';
+        }).join('') +
         '</tbody></table></div>';
+
     // Descriptive stats table
+    const feats = Object.keys(edaData.describe || {});
     html += '<div class="toolbar" style="margin-top:12px;"><span class="filter-count">Descriptive Statistics (df.describe())</span></div>' +
         '<div class="table-wrap" style="max-height:200px;overflow-y:auto;"><table><thead><tr><th>Stat</th>' +
-        Object.keys(edaData.describe || {}).map(c => '<th>' + esc(c) + '</th>').join('') +
+        feats.map(c => '<th>' + esc(c) + '</th>').join('') +
         '</tr></thead><tbody>' +
         ['count','mean','std','min','25%','50%','75%','max'].map(stat =>
             '<tr><td><strong>' + stat + '</strong></td>' +
-            Object.values(edaData.describe).map(v => {
-                const val = v[stat];
-                return '<td>' + (typeof val === 'number' ? val.toLocaleString() : val) + '</td>';
+            feats.map(f => {
+                const val = edaData.describe[f][stat];
+                const display = typeof val === 'number' ? (Math.abs(val) < 0.01 ? val.toExponential(3) : Number(val.toFixed(4)).toLocaleString()) : val;
+                return '<td>' + display + '</td>';
             }).join('') + '</tr>'
         ).join('') + '</tbody></table></div>';
+
+    // Insight box
+    const desc = edaData.describe;
+    if (desc && desc.sttl) {
+        html += '<div class="info-box" style="margin-top:10px;"><strong>Key Insights from Descriptive Statistics:</strong><br>' +
+            '&bull; <strong>sttl</strong> (TTL): ranges from ' + desc.sttl['min'] + ' to ' + desc.sttl['max'] + '. Normal TTL values are typically 64, 128, or 255. Values outside these suggest tunneling or spoofing.<br>' +
+            '&bull; <strong>sbytes</strong> (source bytes): mean = ' + Number(desc.sbytes['mean']).toFixed(1) + ', std = ' + Number(desc.sbytes['std']).toFixed(1) + '. High std indicates traffic volume varies widely.<br>' +
+            '&bull; <strong>Attack rate</strong>: only ' + (edaData.class_distribution.attack_pct || 0) + '% of samples are attacks (imbalanced dataset). This is why we use <code>class_weight=\'balanced\'</code> in the Decision Tree.</div>';
+    }
+
     // Class distribution
     const cd = edaData.class_distribution || {};
     html += '<div class="toolbar" style="margin-top:12px;"><span class="filter-count">Class Distribution</span></div>' +
         '<div class="metrics-grid" style="grid-template-columns:repeat(4,1fr);">' +
         '<div class="metric-card"><div class="m-value">' + (cd.total || 0).toLocaleString() + '</div><div class="m-label">Total Samples</div></div>' +
-        '<div class="metric-card"><div class="m-value" style="color:var(--success);">' + (cd.normal || 0).toLocaleString() + '</div><div class="m-label">Normal</div></div>' +
-        '<div class="metric-card"><div class="m-value" style="color:var(--danger);">' + (cd.attack || 0).toLocaleString() + '</div><div class="m-label">Attacks</div></div>' +
+        '<div class="metric-card"><div class="m-value" style="color:var(--success);">' + (cd.normal || 0).toLocaleString() + '</div><div class="m-label">Normal Traffic</div></div>' +
+        '<div class="metric-card"><div class="m-value" style="color:var(--danger);">' + (cd.attack || 0).toLocaleString() + '</div><div class="m-label">Attack Samples</div></div>' +
         '<div class="metric-card"><div class="m-value" style="color:var(--warning);">' + (cd.attack_pct || 0) + '%</div><div class="m-label">Attack Rate</div></div>' +
         '</div>';
+
     el.innerHTML = html;
 }
 
@@ -366,6 +481,61 @@ function renderEDABoxplots() {
     });
     html += '</div>';
     el.innerHTML = html;
+}
+
+/* ----- SCATTER MATRIX (Pair Plot) ----- */
+function renderEDAScatter() {
+    const el = document.getElementById('eda-scatter-chart');
+    if (!edaData || !edaData.pairplot || !edaData.pairplot.data) {
+        el.innerHTML = '<div class="empty-state">No pair plot data available.</div>'; return;
+    }
+    const pp = edaData.pairplot;
+    const cols = pp.columns;
+    const data = pp.data;
+    const labels = data.label;
+    // Build traces: one per class
+    const normalIdx = [], attackIdx = [];
+    labels.forEach((l, i) => { if (l === 0) normalIdx.push(i); else attackIdx.push(i); });
+    const traces = [];
+    const classes = [
+        { name: 'Normal', idx: normalIdx, color: '#00bcd4', symbol: 'circle' },
+        { name: 'Attack', idx: attackIdx, color: '#ff1744', symbol: 'x' },
+    ];
+    classes.forEach(cls => {
+        if (!cls.idx.length) return;
+        const dims = cols.map(col => ({
+            label: col,
+            values: cls.idx.map(i => data[col][i]),
+        }));
+        traces.push({
+            type: 'splom',
+            dimensions: dims,
+            text: cls.idx.map(i => 'Label: ' + labels[i]),
+            marker: { color: cls.color, size: 3, opacity: 0.5, symbol: cls.symbol },
+            name: cls.name,
+        });
+    });
+    const axisStyle = { showgrid: true, gridcolor: '#1a2332', zeroline: false, showticklabels: false };
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#78909c', size: 8 },
+        margin: { l: 30, r: 30, t: 30, b: 30 },
+        height: 500,
+        hovermode: 'closest',
+        showlegend: true,
+        legend: { font: { color: '#78909c', size: 10 }, orientation: 'h', y: 1.02, x: 0.35 },
+        xaxis: axisStyle, yaxis: axisStyle,
+    };
+    // Add axis templates for each dimension
+    for (let i = 1; i < cols.length; i++) {
+        layout['xaxis' + (i + 1)] = axisStyle;
+        layout['yaxis' + (i + 1)] = axisStyle;
+    }
+    Plotly.react(el, traces, layout, {
+        displayModeBar: true, responsive: true,
+        modeBarButtonsToRemove: ['sendDataToCloud', 'lasso2d', 'select2d'],
+        toImageButtonOptions: { format: 'png' },
+    });
 }
 
 /* ----- PCA ----- */
@@ -493,11 +663,11 @@ function startPipeline(step) {
                     if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.origHtml || step; }
                     if (status.status === 'done') {
                         toast(step + ' completed!', 'success');
-                        if (status.output) showModal(step + ' Output', status.output);
+                        if (status.output) showStyledModal(step + ' Output', formatPipelineOutput(status.output));
                         loadAll();
                     } else {
                         toast(step + ' failed', 'error');
-                        showModal(step + ' Failed', status.error || status.output || 'Unknown error');
+                        showStyledModal(step + ' Failed', formatPipelineOutput(status.error || status.output || 'Unknown error'));
                     }
                     resolve();
                 })
