@@ -22,17 +22,44 @@
         </div>
 
         <div class="sidebar-section">
+            <div class="section-title">Pipeline</div>
+            <div class="btn-grid">
+                <button class="btn" onclick="runStep('clean')" id="btn-clean">
+                    <i class="fas fa-broom"></i> Clean
+                </button>
+                <button class="btn" onclick="runStep('train')" id="btn-train">
+                    <i class="fas fa-brain"></i> Train
+                </button>
+                <button class="btn" onclick="runStep('evaluate')" id="btn-evaluate">
+                    <i class="fas fa-chart-bar"></i> Evaluate
+                </button>
+                <button class="btn" onclick="runStep('knn')" id="btn-knn">
+                    <i class="fas fa-vials"></i> KNN
+                </button>
+                <button class="btn" onclick="runStep('eda')" id="btn-eda">
+                    <i class="fas fa-eye"></i> EDA
+                </button>
+                <button class="btn btn-primary" onclick="runStep('run-all')" id="btn-run-all">
+                    <i class="fas fa-play"></i> Run All
+                </button>
+            </div>
+            <div id="pipeline-progress" class="pipeline-progress" style="display:none;">
+                <div class="pipeline-progress-bar">
+                    <div class="pipeline-progress-fill" id="pipeline-progress-fill"></div>
+                </div>
+                <span class="pipeline-progress-text" id="pipeline-progress-text"></span>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section">
             <div class="section-title">Model Info</div>
             <div class="status-list">
                 <div class="status-item">
-                    <span class="dot dot-green"></span>
+                    <span class="dot dot-green" id="dot-model"></span>
                     <span class="status-label">Model:</span>
                     <span class="status-value" id="val-data">---</span>
-                </div>
-                <div class="status-item">
-                    <span class="dot dot-green"></span>
-                    <span class="status-label">Version:</span>
-                    <span class="status-value" id="val-alerts">---</span>
                 </div>
                 <div class="status-item">
                     <span class="dot dot-green"></span>
@@ -51,26 +78,24 @@
 
         <div class="sidebar-section">
             <div class="section-title">Dataset Stats</div>
-            <div class="status-list" id="dataset-stats">
+            <div class="status-list">
                 <div class="status-item">
                     <span class="dot"></span>
-                    <span class="status-label">Rows:</span>
-                    <span class="status-value">50,000</span>
+                    <span class="status-label">Samples:</span>
+                    <span class="status-value" id="ds-samples">---</span>
                 </div>
                 <div class="status-item">
                     <span class="dot"></span>
                     <span class="status-label">Features:</span>
-                    <span class="status-value">5</span>
+                    <span class="status-value" id="ds-features">---</span>
                 </div>
                 <div class="status-item">
-                    <span class="dot"></span>
-                    <span class="status-label">Attack %:</span>
-                    <span class="status-value">2.2%</span>
+                    <span class="dot dot-red"></span>
+                    <span class="status-label">Attacks:</span>
+                    <span class="status-value" id="ds-attacks">---</span>
                 </div>
             </div>
         </div>
-
-        <div class="sidebar-divider"></div>
 
         <div class="sidebar-section" style="flex:1;">
             <div class="section-title">About</div>
@@ -139,6 +164,49 @@
             </div>
         </div>
 
+        <!-- EDA ANALYSIS SECTION -->
+        <div class="analysis-section" id="eda-section">
+            <div class="analysis-header">
+                <div class="analysis-toggle" id="eda-toggle">
+                    <button class="toggle-btn active" data-view="overview"><i class="fas fa-info-circle"></i> Overview</button>
+                    <button class="toggle-btn" data-view="correlation"><i class="fas fa-th"></i> Correlation</button>
+                    <button class="toggle-btn" data-view="boxplots"><i class="fas fa-chart-box"></i> Box Plots</button>
+                    <button class="toggle-btn" data-view="pca"><i class="fas fa-compress-alt"></i> PCA</button>
+                    <button class="toggle-btn" data-view="clustering"><i class="fas fa-cluster"></i> Clustering</button>
+                </div>
+                <div class="analysis-legend">
+                    <span class="filter-count">Classroom EDA — all techniques studied in class</span>
+                </div>
+            </div>
+
+            <div class="analysis-view active" id="eda-view-overview">
+                <div class="graph-sub">Dataset overview: column info, descriptive statistics, class distribution</div>
+                <div id="eda-overview-content"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+            </div>
+            <div class="analysis-view" id="eda-view-correlation">
+                <div class="graph-sub">Correlation matrix heatmap (Pearson) — shows linear relationships between features</div>
+                <div id="eda-correlation-chart" style="min-height:380px;"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+            </div>
+            <div class="analysis-view" id="eda-view-boxplots">
+                <div class="graph-sub">Box plots (boîte à moustache) — visualize outliers per feature, grouped by Normal vs Attack</div>
+                <div id="eda-boxplots-content"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+            </div>
+            <div class="analysis-view" id="eda-view-pca">
+                <div class="graph-sub">PCA (Analyse en Composantes Principales) — 5D → 2D projection. Shows if classes are separable</div>
+                <div id="eda-pca-chart" style="min-height:420px;"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+                <div class="graph-stats" id="pca-stats">
+                    <div class="gstat"><span class="gstat-val" id="pca-pc1">---</span><span class="gstat-lbl">PC1 Variance</span></div>
+                    <div class="gstat"><span class="gstat-val" id="pca-pc2">---</span><span class="gstat-lbl">PC2 Variance</span></div>
+                    <div class="gstat"><span class="gstat-val" id="pca-cumul">---</span><span class="gstat-lbl">Cumulative</span></div>
+                </div>
+            </div>
+            <div class="analysis-view" id="eda-view-clustering">
+                <div class="graph-sub">K-Means clustering (k=2, unsupervised) vs true labels + Hierarchical clustering dendrogram</div>
+                <div id="eda-clustering-content"><div class="globe-placeholder" style="position:relative;"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM ROW -->
         <div class="bottom-row">
             <div class="panel panel-half" id="panel-cm">
                 <div class="panel-header">
@@ -158,6 +226,7 @@
             </div>
         </div>
 
+        <!-- MODEL TABS -->
         <div class="tabs-section">
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="metrics"><i class="fas fa-chart-bar"></i> Metrics</button>
@@ -168,38 +237,26 @@
             </div>
             <div class="tab-content active" id="tab-metrics">
                 <div class="toolbar"><span class="filter-count">Model Evaluation Metrics</span></div>
-                <div id="metrics-content">
-                    <div class="empty-state">Loading metrics...</div>
-                </div>
+                <div id="metrics-content"><div class="empty-state">Loading metrics...</div></div>
             </div>
             <div class="tab-content" id="tab-tree">
-                <div class="toolbar">
-                    <span class="filter-count">Decision Tree Rules (max_depth=3)</span>
-                </div>
+                <div class="toolbar"><span class="filter-count">Decision Tree Rules (max_depth=3)</span></div>
                 <div class="info-box">
-                    <p><strong>How to Read:</strong> Start at the root. If condition is True, follow left; else follow right. Leaf: 0 = Normal, 1 = Attack.</p>
+                    <p><strong>How to Read:</strong> Start at root. If True → left branch, else right. Leaf: 0 = Normal, 1 = Attack.</p>
                 </div>
-                <div id="tree-content">
-                    <div class="empty-state">Loading tree rules...</div>
-                </div>
+                <div id="tree-content"><div class="empty-state">Loading tree rules...</div></div>
             </div>
             <div class="tab-content" id="tab-features">
                 <div class="toolbar"><span class="filter-count">Feature Importance Ranking</span></div>
-                <div id="features-content">
-                    <div class="empty-state">Loading feature importance...</div>
-                </div>
+                <div id="features-content"><div class="empty-state">Loading feature importance...</div></div>
             </div>
             <div class="tab-content" id="tab-samples">
                 <div class="toolbar"><span class="filter-count">Sample Predictions with Explanations</span></div>
-                <div id="samples-content">
-                    <div class="empty-state">Loading sample predictions...</div>
-                </div>
+                <div id="samples-content"><div class="empty-state">Loading sample predictions...</div></div>
             </div>
             <div class="tab-content" id="tab-comparison">
                 <div class="toolbar"><span class="filter-count">Decision Tree vs KNN Comparison</span></div>
-                <div id="comparison-content">
-                    <div class="empty-state">Loading comparison... (Run 06_knn_comparison.py first)</div>
-                </div>
+                <div id="comparison-content"><div class="empty-state">Loading comparison...</div></div>
             </div>
         </div>
 
@@ -209,7 +266,22 @@
     </main>
 </div>
 
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+<div id="toast-container"></div>
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span id="modal-title">Pipeline Output</span>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <pre class="modal-body" id="modal-body"></pre>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-<script src="/static/js/app.js?v=2" defer></script>
+<script src="/static/js/app.js?v=3" defer></script>
 </body>
 </html>

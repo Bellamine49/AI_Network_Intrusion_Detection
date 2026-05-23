@@ -13,7 +13,8 @@ steps = [
     ("02_feature_engineering.py", "Step 2: Feature Engineering"),
     ("03_model_training.py", "Step 3: Model Training (Decision Tree)"),
     ("04_model_evaluation.py", "Step 4: Model Evaluation"),
-    ("06_knn_comparison.py", "Step 6: Decision Tree vs KNN Comparison")
+    ("06_knn_comparison.py", "Step 6: Decision Tree vs KNN Comparison"),
+    ("07_exploratory_analysis.py", "Step 7: Exploratory Data Analysis (PCA, KMeans, etc.)")
 ]
 
 print("=" * 60)

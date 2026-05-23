@@ -2,8 +2,7 @@ from flask import Flask, jsonify, render_template
 import pandas as pd
 import numpy as np
 import joblib
-import os
-import json
+import os, json, subprocess, sys, threading, uuid
 from pathlib import Path
 
 def create_dashboard():
@@ -19,6 +18,7 @@ def create_dashboard():
     Y_TEST_PATH = str(BASE_DIR / "data/processed/engineered_features_target.csv")
     METRICS_PATH = str(BASE_DIR / "results/evaluation_report.json")
     COMPARISON_PATH = str(BASE_DIR / "results/model_comparison.json")
+    EDA_PATH = str(BASE_DIR / "results/eda_results.json")
 
     model = None
     X_test = None
@@ -37,14 +37,16 @@ def create_dashboard():
             metrics = json.load(f)
         print("Loaded evaluation metrics")
 
+    # ===== PAGE ROUTE =====
     @app.route('/')
     def index():
         return render_template("index.html")
 
+    # ===== METRICS API =====
     @app.route('/api/metrics')
     def api_metrics():
         if model is None or X_test is None:
-            return jsonify({"error": "Model not loaded. Run training first."}), 503
+            return jsonify({"error": "Model not loaded"}), 503
         if metrics:
             perf = metrics.get('performance_metrics', {})
             cm = metrics.get('confusion_matrix', {})
@@ -63,7 +65,6 @@ def create_dashboard():
             }
             cm = {'true_negative': int(tn), 'false_positive': int(fp),
                   'false_negative': int(fn), 'true_positive': int(tp)}
-
         return jsonify({
             "model": f"Decision Tree (max_depth={getattr(model, 'max_depth', '?')})",
             "version": "v1.0",
@@ -71,27 +72,28 @@ def create_dashboard():
             "confusion_matrix": cm
         })
 
+    # ===== TREE RULES API =====
     @app.route('/api/tree')
     def api_tree():
         if model is None or X_test is None:
             return jsonify({"error": "Model not loaded"}), 503
         from sklearn.tree import export_text
-        feature_names = list(X_test.columns)
-        tree_rules = export_text(model, feature_names=feature_names, spacing=3, decimals=4)
+        tree_rules = export_text(model, feature_names=list(X_test.columns), spacing=3, decimals=4)
         return jsonify({"rules": tree_rules})
 
+    # ===== FEATURE IMPORTANCE API =====
     @app.route('/api/features')
     def api_features():
         if model is None or X_test is None:
             return jsonify({"error": "Model not loaded"}), 503
         importances = model.feature_importances_
-        feature_names = list(X_test.columns)
         features = [
             {"name": name, "importance": round(imp, 6)}
-            for name, imp in sorted(zip(feature_names, importances), key=lambda x: -x[1])
+            for name, imp in sorted(zip(list(X_test.columns), importances), key=lambda x: -x[1])
         ]
         return jsonify({"features": features})
 
+    # ===== SAMPLES API =====
     @app.route('/api/samples')
     def api_samples():
         if model is None or X_test is None:
@@ -101,28 +103,76 @@ def create_dashboard():
         y_sample_true = y_test.iloc[:sample_size]
         y_sample_pred = model.predict(X_sample)
         y_sample_proba = model.predict_proba(X_sample)[:, 1]
-        feature_names = list(X_test.columns)
-
         samples = []
         for i in range(sample_size):
-            sample = {
+            samples.append({
                 "true_label": "Attack" if y_sample_true.iloc[i] == 1 else "Normal",
                 "predicted": "Attack" if y_sample_pred[i] == 1 else "Normal",
                 "confidence": round(float(y_sample_proba[i]), 6),
-                "features": {feat: float(X_sample.iloc[i][feat]) for feat in feature_names}
-            }
-            samples.append(sample)
+                "features": {feat: float(X_sample.iloc[i][feat]) for feat in list(X_test.columns)}
+            })
         return jsonify({"samples": samples})
 
+    # ===== COMPARISON API =====
     @app.route('/api/comparison')
     def api_comparison():
         if os.path.exists(COMPARISON_PATH):
             with open(COMPARISON_PATH, 'r') as f:
-                comp_data = json.load(f)
-            return jsonify(comp_data)
+                return jsonify(json.load(f))
         return jsonify({"models": []})
 
-    print("Dashboard routes configured")
+    # ===== EDA API =====
+    @app.route('/api/eda')
+    def api_eda():
+        if os.path.exists(EDA_PATH):
+            with open(EDA_PATH, 'r') as f:
+                return jsonify(json.load(f))
+        return jsonify({"error": "EDA not available. Run EDA pipeline step first."}), 503
+
+    # ===== PIPELINE RUNNER =====
+    pipeline_tasks = {}
+    SRC_DIR = str(BASE_DIR / "src")
+    steps_map = {
+        "clean": "01_data_cleaning.py",
+        "train": "03_model_training.py",
+        "evaluate": "04_model_evaluation.py",
+        "knn": "06_knn_comparison.py",
+        "eda": "07_exploratory_analysis.py",
+    }
+
+    def _run_step_async(step_name, script, task_id):
+        try:
+            pipeline_tasks[task_id] = {"status": "running", "output": "", "error": ""}
+            script_path = os.path.join(SRC_DIR, script)
+            result = subprocess.run([sys.executable, script_path], capture_output=True, text=True, cwd=str(BASE_DIR))
+            if result.returncode == 0:
+                pipeline_tasks[task_id] = {"status": "done", "output": result.stdout, "error": ""}
+            else:
+                pipeline_tasks[task_id] = {"status": "failed", "output": result.stdout, "error": result.stderr}
+        except Exception as e:
+            pipeline_tasks[task_id] = {"status": "failed", "output": "", "error": str(e)}
+
+    @app.route('/api/pipeline/<step>', methods=["POST"])
+    def api_pipeline(step):
+        if step not in steps_map:
+            return jsonify({"error": f"Unknown step: {step}. Valid: {list(steps_map.keys())}"}), 400
+        task_id = str(uuid.uuid4())
+        t = threading.Thread(target=_run_step_async, args=(step, steps_map[step], task_id), daemon=True)
+        t.start()
+        return jsonify({"task_id": task_id})
+
+    @app.route('/api/pipeline/status/<task_id>')
+    def api_pipeline_status(task_id):
+        s = pipeline_tasks.get(task_id)
+        if not s:
+            return jsonify({"status": "not_found"})
+        if s["status"] in ("done", "failed"):
+            result = dict(s)
+            pipeline_tasks.pop(task_id, None)
+            return jsonify(result)
+        return jsonify(s)
+
+    print("Dashboard routes configured (6 model + 7 EDA + pipeline)")
     return app
 
 if __name__ == "__main__":
