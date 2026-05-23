@@ -60,6 +60,16 @@ def run_eda():
     }
     print(f"  Class distribution: {results['class_distribution']}")
 
+    # 1.5 DATA PREVIEW — first 10 rows like df.head()
+    preview_cols = [c for c in df.columns if c != 'label'] + (['label'] if 'label' in df.columns else [])
+    preview_data = df.head(10).copy()
+    preview_data['label'] = y.head(10).values
+    results["data_preview"] = {
+        "columns": list(preview_data.columns),
+        "rows": preview_data.values.tolist(),
+    }
+    print(f"  Data preview: {len(results['data_preview']['rows'])} rows x {len(results['data_preview']['columns'])} cols")
+
     # 2. CORRELATION MATRIX
     corr = df.corr().round(4)
     results["correlation"] = {

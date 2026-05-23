@@ -331,6 +331,28 @@ function renderEDAOverview() {
     if (!edaData || !edaData.info) { el.innerHTML = '<div class="empty-state">EDA not available. Run EDA step first.</div>'; return; }
     let html = '';
 
+    // Data Preview (df.head())
+    if (edaData.data_preview && edaData.data_preview.rows) {
+        const dp = edaData.data_preview;
+        html += '<div class="toolbar"><span class="filter-count">Aperçu des données — df.head() — first ' + dp.rows.length + ' rows</span></div>' +
+            '<div class="table-wrap" style="max-height:280px;overflow-y:auto;margin-bottom:8px;"><table><thead><tr><th>#</th>' +
+            dp.columns.map(c => '<th>' + esc(c) + '</th>').join('') +
+            '</tr></thead><tbody>' +
+            dp.rows.map((row, ri) => {
+                const isAttack = row[dp.columns.indexOf('label')] === 1;
+                return '<tr style="' + (isAttack ? 'background:rgba(255,23,68,0.05);' : '') + '"><td style="color:var(--text-muted);">' + (ri + 1) + '</td>' +
+                    row.map((v, ci) => {
+                        const col = dp.columns[ci];
+                        let display = v;
+                        if (typeof v === 'number') {
+                            display = Math.abs(v) < 0.01 ? v.toExponential(3) : Number(Number(v).toFixed(4)).toLocaleString();
+                        }
+                        return '<td>' + display + '</td>';
+                    }).join('') + '</tr>';
+            }).join('') +
+            '</tbody></table></div>';
+    }
+
     // Data Quality Summary
     const totalNulls = edaData.info.reduce((s, c) => s + c.null_count, 0);
     const allNumeric = edaData.info.every(c => c.dtype.includes('float') || c.dtype.includes('int'));
@@ -361,7 +383,8 @@ function renderEDAOverview() {
             };
             return '<tr><td>' + (i + 1) + '</td><td><strong>' + esc(c.column) + '</strong></td><td>' + esc(c.dtype) + '</td><td>' + c.non_null.toLocaleString() + '</td><td>' + c.null_count + '</td><td style="color:var(--text-muted);font-size:0.62rem;">' + (meanings[c.column] || '—') + '</td></tr>';
         }).join('') +
-        '</tbody></table></div>';
+        '</tbody></table></div>' +
+        '<div class="info-box" style="margin-top:6px;"><strong>Target variable (label):</strong> 0 = Normal traffic, 1 = Attack. Already encoded — no LabelEncoder needed.</div>';
 
     // Descriptive stats table
     const feats = Object.keys(edaData.describe || {});
