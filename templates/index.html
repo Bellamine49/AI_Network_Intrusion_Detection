@@ -98,10 +98,16 @@
         </div>
 
         <div class="sidebar-section" style="flex:1;">
-            <div class="section-title">About</div>
+            <div class="section-title">About — Projet ENSA Kénitra</div>
             <div style="font-size:0.62rem;color:var(--text-muted);line-height:1.6;padding:4px 0;">
-                Explainable AI for network intrusion detection using Decision Tree (max_depth=3).
-                Built for classroom demonstration — every rule is traceable.
+                <strong>Conçu à partir de 6 entretiens professionnels</strong><br>
+                • Explicabilité (6/6) → Decision Tree depth=3<br>
+                • Faible faux positifs (6/6) → class_weight='balanced'<br>
+                • Aide à la décision humaine (6/6) → mode recommandation<br>
+                • Features simples réseau (5/6) → 5 features seulement<br>
+                • Intégration facile (5/6) → API REST standards<br>
+                <br>
+                <a href="#" onclick="showInterviewsModal(); return false;" style="color:var(--accent);">Voir le détail des entretiens →</a>
             </div>
         </div>
 
@@ -239,6 +245,7 @@
                 <button class="tab-btn" data-tab="features"><i class="fas fa-list"></i> Feature Importance</button>
                 <button class="tab-btn" data-tab="samples"><i class="fas fa-table"></i> Predictions</button>
                 <button class="tab-btn" data-tab="comparison"><i class="fas fa-vials"></i> DT vs KNN</button>
+                <button class="tab-btn" data-tab="interviews"><i class="fas fa-users"></i> Entretiens</button>
             </div>
             <div class="tab-content active" id="tab-metrics">
                 <div class="toolbar"><span class="filter-count">Model Evaluation Metrics</span></div>
@@ -262,6 +269,10 @@
             <div class="tab-content" id="tab-comparison">
                 <div class="toolbar"><span class="filter-count">Decision Tree vs KNN Comparison</span></div>
                 <div id="comparison-content"><div class="empty-state">Loading comparison...</div></div>
+            </div>
+            <div class="tab-content" id="tab-interviews">
+                <div class="toolbar"><span class="filter-count">6 entretiens professionnels — ENSA Kénitra 2025–2026</span></div>
+                <div id="interviews-content"><div class="empty-state">Loading interview links...</div></div>
             </div>
         </div>
 

@@ -1,0 +1,421 @@
+École Nationale des Sciences Appliquées
+Kénitra — Génie Réseau et Systèmes de
+Télécommunication
+Synthèse des entretiens
+Analyse du trafic réseau par intelligence artificielle
+6 entretiens menés auprès de professionnels IT
+Objectif Orienter la conception d’une solution IA d’analyse du trafic réseau
+Structure 4 phases — 15 questions — Guide d’entretien ENSA Kénitra
+Cadre Projet académique, 1re année cycle Ingénieur RST
+Enquêteurs
+Niama Bahlouli | Meriem Barhi | Mohammed Bellamine
+Étudiants en 1re année cycle Ingénieur RST, ENSA Kénitra
+Année universitaire 2025–2026
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Table des matières
+Présentation des interviewés 2
+1 Phase 1 — Introduction et contexte professionnel 3
+1.1 Q1 — Rôle dans la gestion, la supervision ou la sécurisation du réseau . . . 3
+1.2 Q2 — Description de l’infrastructure réseau gérée . . . . . . . . . . . . . . 3
+1.3 Q3 — Incidents récurrents affectant le trafic réseau . . . . . . . . . . . . . 4
+2 Phase 2 — Problèmes observés et pratiques actuelles 6
+2.1 Q4 — Principales causes des perturbations / anomalies . . . . . . . . . . . 6
+2.2 Q5 — Risques et situations rencontrés . . . . . . . . . . . . . . . . . . . . 7
+2.3 Q6 — Journaux d’événements (logs) : collecte et analyse . . . . . . . . . . 7
+2.4 Q7 — Outils actuels de supervision et d’analyse du trafic . . . . . . . . . . 8
+2.5 Q8 — Difficultés liées aux faux positifs / faux négatifs . . . . . . . . . . . 8
+2.6 Q9 — Procédure de traitement d’une anomalie (alerte → résolution) . . . . 9
+3 Phase 3 — Perception d’une solution basée sur l’IA 11
+3.1 Q10 — Opinion sur un système IA d’analyse en temps réel du trafic réseau 11
+3.2 Q11 — Blocage automatique vs recommandation humaine . . . . . . . . . 11
+3.3 Q12 — Importance de l’explicabilité des décisions de l’IA . . . . . . . . . . 12
+4 Phase 4 — Attentes, priorités et adoption 14
+4.1 Q13 — Trois priorités absolues pour la solution idéale . . . . . . . . . . . . 14
+4.2 Q14 — Freins à l’adoption . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+4.3 Q15 — Aspects complémentaires non abordés . . . . . . . . . . . . . . . . 15
+Conclusion générale et recommandations 16
+1
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Présentation des interviewés
+Les six entretiens ont été conduits auprès de professionnels aux profils complémentaires, couvrant des secteurs variés (banque, justice, informatique) et des niveaux de
+responsabilité distincts.
+N°
+Interviewé(e) Poste Organisation
+1 Dounia Haliloua Analyste IT &
+Contrôleuse permanente
+N2
+Société Générale
+2 Mohammed
+Kadri
+Expert Technique .NET CGI
+3 Abdelkbir
+Rouaghbi
+Administrateur
+infrastructure système
+Cour de cassation
+4 Nawal Mekkaoui Administratrice réseau Cour de cassation (depuis 2007)
+5 Saad Mekkaoui Ingénieur réseau et
+sécurité
+Entreprise
+6 Assiya Akli Administratrice réseau Cour de cassation
+Les profils couvrent un spectre large : du contrôle de second niveau (vision
+risque/conformité) à l’administration réseau opérationnelle, en passant par le développement applicatif. Cette diversité enrichit la collecte de besoins et garantit une
+vision représentative des réalités terrain.
+2
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Phase 1 — Introduction et contexte professionnel
+Q1 — Rôle dans la gestion, la supervision ou la sécurisation du
+réseau
+— E1 — Dounia Haliloua (Société Générale) : Poste de contrôle permanent de
+niveau 2 (deuxième ligne de défense), indépendant et orienté risque/conformité. Elle
+évalue les dispositifs des équipes métier, cartographie les risques IT et produit des
+revues trimestrielles sur des thèmes tels que le firewalling, l’infrastructure ou les opérations de sécurité réseau.
+— E2 — Mohammed Kadri (CGI) : Expert Technique .NET avec 5 ans d’expérience.
+Il conçoit, développe et maintient des applications web d’entreprise (APIs, backends,
+bases de données) en veillant à leur performance, fiabilité et sécurité.
+— E3 — Abdelkbir Rouaghbi (Cour de cassation) : Administrateur d’infrastructure système et docteur en sécurité informatique et IoT. Il assure la gestion, la supervision et la sécurité de l’ensemble du parc informatique de l’institution.
+— E4 — Nawal Mekkaoui (Cour de cassation) : Administratrice réseau depuis
+2007, elle assure la disponibilité, la sécurité et la performance du réseau, et intervient
+en cas d’incident.
+— E5 — Saad Mekkaoui (Service informatique) : Ingénieur réseau et sécurité
+chargé de la supervision quotidienne de l’infrastructure, de la mise en œuvre des politiques de sécurité, de la gestion des incidents et de l’administration des équipements
+actifs (routeurs, switches, pares-feux).
+— E6 — Assiya Akli (Cour de cassation) : Administratrice réseau assurant l’installation, la configuration, la supervision et la mise à jour de l’ensemble des équipements
+réseau (routeurs, firewalls, switches fédérateurs, sous-répartiteurs).
+Les profils vont du contrôle de conformité bancaire à l’administration réseau opérationnelle, en passant par le développement applicatif et l’ingénierie sécurité. Cette
+complémentarité garantit une collecte de besoins représentative de la diversité des
+réalités terrain.
+Q2 — Description de l’infrastructure réseau gérée
+— E1 (Société Générale) : Infrastructure bancaire française en contexte offshore (Maroc). Deux prestataires de pare-feu, plusieurs prestataires de serveurs, outils développés
+en interne avec logique de redondance obligatoire.
+— E2 (CGI) : Environnement applicatif web d’entreprise : services backend, APIs, bases
+3
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+de données, outils de déploiement et de supervision. Pas de gestion réseau physique
+directe.
+— E3 (Cour de cassation) : Infrastructure hétérogène : 6 nœuds physiques, ≈80 serveurs virtuels (VMware 6.0 sur Nutanix), ≈400 machines clientes, des centaines d’imprimantes et dizaines de scanners. 400 à 450 utilisateurs.
+— E4 (Cour de cassation) : ≈350 utilisateurs sur site principal avec accès distants
+sécurisés. Architecture segmentée en VLANs. Pare-feu FortiGate 601E, routeurs Cisco
+2900/4200, switches HP ProCurve 2910/2530. Services critiques : Active Directory,
+DNS, DHCP, système de fichiers, applications métiers. VPN pour les accès distants.
+— E5 (Service informatique) : Infrastructure multi-sites reliée par MPLS/VPN. Équipements Cisco, virtualisation VMware, 500 à 1 000 utilisateurs actifs. Services critiques : ERP, messagerie, applications métiers. Architecture segmentée en DMZ, réseau
+interne et zone de production.
+— E6 (Cour de cassation) : Deux firewalls en haute disponibilité (HA), trois routeurs
+avec liaisons Internet harmonisées via load balancer, ≈20 switches, liaisons louées avec
+partenaires, VoIP, DMZ et zones d’application internes. ≈500 utilisateurs.
+Les infrastructures varient de la petite/moyenne taille (Cour de cassation, 350–500
+utilisateurs) à des environnements bancaires complexes à grande échelle. L’hétérogénéité des équipements, la redondance et la segmentation réseau sont des constantes
+dans tous les contextes.
+Q3 — Incidents récurrents affectant le trafic réseau
+— E1 : Incidents opérationnels : écarts entre pratiques documentées et réelles, défaut de
+redondance, alertes ponctuelles lors de pics d’activité ou d’erreurs de configuration.
+Phishing persistant.
+— E2 : Lenteurs applicatives, erreurs de connexion à la base de données, incidents après
+déploiement, pics de trafic inhabituels.
+— E3 : Lenteurs liées aux pics d’activité et coupures de service ponctuelles. Les mises à
+jour sont planifiées hors heures ouvrées (après 18h) pour limiter l’impact.
+— E4 : Incidents mineurs récurrents (hebdomadaires à mensuels) : saturation de bande
+passante, problèmes de connectivité DHCP, coupures ponctuelles des liaisons Internet.
+Apparaissent lors de forte utilisation ou après des changements d’équipements.
+— E5 : Ralentissements périodiques lors des pics de bande passante, alertes IDS/IPS sur
+comportements inhabituels, tentatives de connexion suspectes depuis des IP externes,
+incidents liés à des erreurs de configuration lors des mises à jour.
+4
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+— E6 : Anomalies à une fréquence de 1 à 3 fois par an (environ tous les 1 à 2 mois).
+Les incidents réseau sont universels et transversaux à tous les profils. Les lenteurs
+liées aux pics d’activité, les erreurs de configuration et les comportements suspects
+sont les plus fréquemment cités. La fréquence varie selon la taille et la complexité de
+l’infrastructure.
+5
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Phase 2 — Problèmes observés et pratiques actuelles
+Q4 — Principales causes des perturbations / anomalies
+Tous les interviewés s’accordent sur un caractère mixte des causes :
+— E1 : Causes organisationnelles (manque de documentation, écart entre pratiques
+réelles et procédures) et techniques (défaut de redondance).
+— E2 : Causes mixtes : erreurs de configuration, défauts de déploiement, requêtes non
+optimisées, manque de documentation, facteur humain.
+— E3 : Causes techniques (câblage, alimentation, défaillances matérielles) et humaines
+(manipulations incorrectes, erreurs de configuration pouvant paralyser l’activité).
+— E4 : Causes multifactorielles dominées par le mixte : technique (erreurs de configuration, saturation, pannes matérielles), humain (manipulations, changements mal
+maîtrisés) et organisationnel (manque de processus et de coordination).
+— E5 : Causes mixtes : technique (erreurs de configuration, mises à jour mal planifiées,
+défaillances matérielles), humain (comportements inadaptés, téléchargements massifs,
+VPN non autorisés), organisationnel (manque de procédures formalisées, documentation non à jour).
+— E6 : Problèmes techniques sur les serveurs (files d’attente, pertes de paquets), erreurs
+humaines créant des boucles réseau, postes infectés alourdissant le trafic.
+La quasi-totalité des interviewés identifie des causes mixtes (technique + humain
++ organisationnel). Le facteur humain et le manque de documentation sont systématiquement cités comme amplificateurs des incidents, indépendamment du secteur
+d’activité.
+6
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Q5 — Risques et situations rencontrés
+Risque
+E1 E2 E3 E4 E5 E6
+Surcharge / congestion du trafic ✓ ✓ ✓ ✓ ✓ ✓
+Attaque DDoS – – ✓ – ✓ –
+Logiciels malveillants / ransomwares ✓ – – ✓ ✓ ✓
+Phishing ✓ ✓ – – – –
+Accès non autorisés – ✓ – ✓ ✓ –
+Mouvements latéraux internes – – – ✓ ✓ –
+Erreurs de configuration ✓ ✓ ✓ ✓ ✓ ✓
+Fuite / compromission d’identifiants – – – ✓ – –
+La surcharge du trafic et les erreurs de configuration sont les risques unanimement
+rencontrés (6/6). Le phishing est cité comme particulièrement insidieux avec un taux
+de réussite pouvant atteindre 30 % (E2). Les mouvements latéraux internes sont reconnus comme difficiles à détecter sans outils adaptés (E4, E5). La compromission
+d’identifiants administrateurs est également relevée comme risque critique (E4).
+Q6 — Journaux d’événements (logs) : collecte et analyse
+— E1 : Logs collectés en interne (firewall, serveurs, applications). Analyse en temps réel
+par l’équipe N1 ; le niveau N2 (contrôle) intervient en aval sur dossier documentaire.
+— E2 : Logs applicatifs, logs serveur, erreurs d’authentification, logs base de données.
+Analyse ciblée pour identifier rapidement l’origine d’un incident.
+— E3 : Logs firewall, serveurs, applications, bases de données et antivirus PC clients.
+Collecte continue tout au long de la journée.
+— E4 : Pas de solution centralisée de gestion des logs (expirée fin 2023, non
+renouvelée). Analyse des logs équipement par équipement uniquement lors d’incidents
+ou d’anomalies.
+— E5 : Logs de pare-feu, logs d’authentification, flux NetFlow, alertes IDS/IPS. Centralisés dans un SIEM. Analyse quotidienne par l’équipe de sécurité avec alertes en
+7
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+temps réel pour les événements critiques.
+— E6 : Logs générés par les équipements principaux mais non analysés faute de
+moyens. Stockés uniquement à des fins de référence en cas de besoin.
+La collecte de logs est généralisée, mais leur exploitation varie considérablement. E5
+représente la pratique la plus mature (SIEM + analyse quotidienne + alertes temps
+réel). À l’opposé, E4 et E6 illustrent un besoin criant d’automatisation : logs collectés
+mais inaccessibles faute de moyens d’analyse. Ce constat valide directement l’utilité
+d’une solution IA centralisée.
+Q7 — Outils actuels de supervision et d’analyse du trafic
+— E1 : Outils développés en interne (inspirés des SIEM open source), CyberArk (IAM),
+outil interne similaire à Wazuh (protection endpoints), pare-feu multi-prestataires.
+Développement interne pour limiter l’exposition du SI.
+— E2 : Outils de journaux applicatifs, suivi d’erreurs, supervision de performance (non
+précisés nominativement).
+— E3 : Kaspersky (sécurité endpoints), Zabbix (supervision), Wireshark (analyse réseau).
+— E4 : OpManager de ManageEngine (supervision). WAF F5 avec phase d’apprentissage
+automatique.
+— E5 : PRTG Network Monitor (supervision temps réel), Wireshark (analyse paquets),
+Splunk (corrélation logs et détection d’anomalies), Nagios (supervision et disponibilité), FortiAnalyzer (rapports de sécurité pare-feu).
+— E6 : OpManager (supervision), interfaces de tableau de bord des firewalls et équipements actifs. WAF F5 avec phase d’apprentissage.
+L’outillage est hétérogène. E5 dispose de l’arsenal le plus complet (PRTG + Splunk
++ Wireshark + Nagios + FortiAnalyzer). E4 et E6 utilisent OpManager sans analyse centralisée. La tendance au développement d’outils internes (E1) reflète des
+contraintes de confidentialité propres au secteur bancaire. On note une convergence
+vers OpManager et Wireshark dans les administrations publiques marocaines.
+Q8 — Difficultés liées aux faux positifs / faux négatifs
+— E1 : Rôle de contrôle a posteriori ; la problématique des faux positifs appartient à
+l’équipe N1. Le niveau N2 intervient après qualification.
+8
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+— E2 : Non spécifiquement mentionné, mais la validation de l’alerte constitue la première
+étape de la procédure de traitement.
+— E3 : Faux positifs identifiés comme difficulté majeure : ils font perdre du temps sur
+des alertes non critiques et peuvent masquer des menaces réelles.
+— E4 : Faux positifs concrets sur le WAF F5 : blocage d’e-mails avec pièces jointes >2
+Mo et de fichiers CSV contenant des formules Excel (ex. =CMD()) interprétées comme
+des payloads malveillants.
+— E5 : Problème réel et majeur. Nombreux faux positifs lors de pics légitimes (sauvegardes nocturnes, réplications inter-sites) créant une fatigue aux alertes. Des attaques lentes (reconnaissance progressive) échappent aux seuils (faux négatifs).
+— E6 : Faux positifs sur le WAF F5 bloquant du trafic légitime, nécessitant une intervention humaine pour débloquer et requalifier.
+Les faux positifs sont une problématique transversale à tous les profils. Ils engendrent
+une fatigue opérationnelle et une perte de confiance dans les outils de détection. Les
+faux négatifs (attaques lentes et discrètes) représentent un risque complémentaire
+tout aussi préoccupant (E5). La réduction de ces deux types d’erreurs est la priorité
+numéro 1 unanimement exprimée pour une future solution IA.
+Q9 — Procédure de traitement d’une anomalie (alerte → résolution)
+Malgré des contextes différents, les procédures convergent autour d’un schéma commun
+en 5 à 7 étapes :
+9
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Étape Description consolidée
+1. Détection
+Alerte remontée par outil de supervision (SIEM, IDS/IPS, OpManager), signalement utilisateur ou test de connectivité.
+2. Qualification
+Identification de la nature de l’alerte (faux positif ?), de son impact,
+de sa criticité et de son périmètre.
+3. Analyse
+Croisement des informations : logs, état des équipements, configuration, captures de paquets. Identification de la cause racine.
+4. Action corrective
+Correction de configuration, redémarrage de service, modification de
+règles firewall, confinement ou remédiation.
+5. Escalade
+Remontée hiérarchique si le risque est fort ou l’impact élevé (responsable sécurité, direction IT).
+6. Vérification
+Contrôle du rétablissement des services et absence d’impact résiduel.
+7. Clôture
+Documentation de l’incident, rapport, mise à jour des règles de détection, analyse post-incident pour éviter la récurrence.
+La procédure type suit le schéma : détection → qualification → analyse →
+action → escalade → vérification → clôture. L’escalade en cas de risque élevé et
+la documentation finale sont présentes dans tous les contextes, bien qu’elles ne soient
+pas toujours appliquées de façon systématique (E4, E6 notamment). C’est un axe
+d’amélioration que la solution IA pourrait soutenir via la génération automatique de
+rapports.
+10
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Phase 3 — Perception d’une solution basée sur l’IA
+Q10 — Opinion sur un système IA d’analyse en temps réel du
+trafic réseau
+Tous les interviewés accueillent positivement le concept avec enthousiasme :
+— E1 : L’IA est déjà intégrée chez Société Générale (outil de synthèse des évaluations
+passées, outil de rédaction entraîné sur la taxonomie interne). Jugée très utile pour les
+tâches répétitives : une journée de travail peut être réduite à 2 heures.
+— E2 : Approche très utile pour analyser rapidement de grands volumes de données
+et repérer des comportements inhabituels dans un environnement web. Améliore la
+détection des incidents de performance et des activités suspectes.
+— E3 : Excellente opportunité pour gagner en réactivité. L’analyse en temps réel est
+impossible manuellement de façon continue. Tous les constructeurs (hardware et software) intègrent désormais l’IA dans leurs produits.
+— E4 : Système jugé très intéressant : détection en temps réel des anomalies, meilleure
+visibilité, réduction du temps de réaction et génération automatique de rapports. Doit
+rester un outil d’aide à la décision.
+— E5 : Perception très prometteuse. Permettrait de réduire significativement le temps
+de réaction et la charge cognitive des équipes. Particulièrement utile pour détecter les
+menaces avancées échappant aux règles statiques. Une période de calibration initiale
+est nécessaire.
+— E6 : Outil jugé très intéressant pour économiser du temps, de l’effort et réduire la
+durée d’arrêt de service. Représente une valeur ajoutée très importante.
+L’adhésion est unanime (6/6). Le gain en réactivité, la capacité à traiter de grands
+volumes de données en temps réel et la détection de menaces subtiles sont les bénéfices
+les plus cités. La nécessité d’une phase de calibration/apprentissage est reconnue par
+plusieurs interviewés (E4, E5, E6).
+Q11 — Blocage automatique vs recommandation humaine
+La position est quasi unanime : tous préfèrent un mode de recommandation avec
+décision finale humaine, du moins dans un premier temps.
+— E1 : L’IA ne peut pas remplacer l’analyse humaine. Préférence pour des outils qui
+recommandent sans décider de manière autonome.
+— E2 : La décision finale doit rester humaine pour éviter des blocages injustifiés ou un
+11
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+impact inutile sur les utilisateurs.
+— E3 : Partisan des décisions humaines finales. L’IA analyse, l’humain décide et intervient. Garder le contrôle sur les flux métier est crucial.
+— E4 : Confiance dans le blocage automatique uniquement pour des cas bien définis (règles simples, signatures connues, menaces clairement identifiées). Pour les cas
+ambigus ou comportementaux : recommandation humaine obligatoire.
+— E5 : Mode semi-automatique privilégié : l’IA recommande (blocage, investigation,
+mise en quarantaine), un opérateur valide. À terme, un mode entièrement automatique
+peut être envisagé pour les menaces clairement identifiées.
+— E6 : Recommandations uniquement dans un premier temps pour bâtir la confiance
+et adapter l’outil au contexte. L’automatisation est envisageable une fois la confiance
+établie, mais en conservant toujours une possibilité d’intervention humaine.
+Le consensus est fort : l’IA comme aide à la décision, non comme décisionnaire autonome. La progression vers l’automatisation est envisagée (E4, E5, E6)
+mais conditionnée à une validation préalable et à un niveau de confiance suffisant.
+La criticité des systèmes métiers justifie cette prudence. E4 nuance en acceptant le
+blocage automatique pour les menaces clairement connues.
+Q12 — Importance de l’explicabilité des décisions de l’IA
+L’explicabilité est jugée indispensable et non négociable par l’ensemble des interviewés :
+— E1 : Implicite dans la logique de contrôle : chaque décision doit être justifiable et
+traçable pour le niveau N2.
+— E2 : Une bonne explication des alertes figure parmi les trois priorités absolues de la
+solution idéale.
+— E3 : Indispensable pour comprendre les raisons d’un blocage et ajuster les politiques
+de sécurité. L’humain travaille avec l’IA mais reste maître des décisions.
+— E4 : Essentielle : permet de valider la pertinence d’une alerte, d’éviter les faux positifs
+récurrents, d’ajuster les règles et de prendre des décisions claires. « Une IA efficace
+en réseau ne doit pas seulement détecter, mais aussi justifier clairement ses décisions
+de manière compréhensible par un ingénieur réseau. »
+— E5 : Fondamentale. L’IA doit indiquer : quels indicateurs ont déclenché l’alerte, en
+quoi le comportement s’écarte de la norme, et quel niveau de confiance est associé à la
+décision. Des tableaux de bord présentant les facteurs contributifs sont très appréciés.
+12
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+— E6 : Absolument nécessaire. C’est la responsabilité de l’administrateur. L’outil peut
+agir automatiquement, mais en expliquant ses actions pour permettre à l’administrateur d’approuver ou de refuser.
+L’explicabilité est un critère non négociable (6/6). Elle conditionne la confiance dans
+l’outil, permet à l’opérateur de valider ou d’infirmer les décisions de manière éclairée,
+et est perçue comme un gage de responsabilité professionnelle. Les exigences minimales sont : indicateurs déclencheurs, niveau de confiance, et écart par rapport à la
+norme.
+13
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Phase 4 — Attentes, priorités et adoption
+Q13 — Trois priorités absolues pour la solution idéale
+Priorité
+E1 E2 E3 E4 E5 E6
+Précision / faible taux de faux positifs ✓ ✓ ✓ ✓ ✓ ✓
+Intégration facile avec l’existant ✓ ✓ ✓ ✓ ✓ –
+Interface simple / ergonomique ✓ – – ✓ ✓ ✓
+Explicabilité / rapports clairs – ✓ ✓ ✓ ✓ –
+Détection en temps réel – – – ✓ – –
+Performance / haute disponibilité – – – ✓ – ✓
+Les trois priorités les plus fréquemment citées sont :
+1. Précision et faible taux de faux positifs — citée par les 6 interviewés. Un système
+générant trop d’alertes non pertinentes ne sera pas adopté (E5).
+2. Intégration facile avec les outils existants (SIEM, pare-feu, supervision) via des
+API standard (5/6).
+3. Explicabilité et interface ergonomique — tableaux de bord clairs, rapports automatiques compréhensibles, explications des décisions de l’IA (5/6).
+E4 ajoute deux critères supplémentaires importants : la détection en temps réel
+avec analyse fine du trafic, et la performance (traitement de gros volumes sans latence,
+haute disponibilité).
+Q14 — Freins à l’adoption
+— Budget (6/6) : Coût de licence, déploiement et maintenance. Doit être justifiable
+auprès de la direction. Identifié comme premier frein par E1, E2, E3, E4, E5, E6.
+— Résistance au changement (6/6) : Particulièrement marquée chez les collaborateurs expérimentés (E1), le personnel de décision dans les administrations (E6), et
+certains membres d’équipe percevant l’IA comme une menace pour leur rôle (E5). Un
+accompagnement au changement est nécessaire.
+— Formation (5/6) : L’équipe doit être formée à l’interprétation des résultats et à la
+gestion de l’outil (E2, E3, E4, E5).
+14
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+— Confidentialité des données (5/6) : L’analyse du trafic implique des données
+potentiellement sensibles. La solution doit être déployable en mode cloud souverain ou
+en interne (E5). Critique dans les administrations à fort degré de confidentialité (E4,
+E6).
+— Compatibilité avec le matériel existant (3/6) : Cruciale lors de l’intégration
+dans une infrastructure déjà en place (E1, E3, E4).
+— Période de calibration (3/6) : Phase d’apprentissage nécessaire avant la pleine
+opérationnalité (E4, E5, E6).
+Budget et résistance au changement sont les deux freins universels. La confidentialité
+des données est critique dans les administrations publiques (Cour de cassation) et
+dans le secteur bancaire. La période de calibration est un frein temporaire mais
+incontournable, à anticiper dans la stratégie de déploiement.
+Q15 — Aspects complémentaires non abordés
+Les interviewés soulèvent plusieurs points additionnels essentiels :
+— E1 et E3 : Protection des données personnelles des employés ; compatibilité avec le
+matériel existant.
+— E4 : Gestion des faux positifs et du bruit d’alerte comme enjeu critique ; traçabilité
+et audit (historique exploitable pour l’analyse post-incident et la conformité) ; scalabilité face à la croissance des volumes de trafic ; capacité de la solution à proposer
+des actions correctives concrètes (pas seulement des alertes).
+— E5 : Gestion des mises à jour du modèle IA dans le temps (performances face à l’évolution des menaces) ; résilience de la solution en cas de panne ou compromission ; cadre
+réglementaire (RGPD, réglementations locales) ; modalités de support et maintenance
+fournisseur.
+— E6 : Qualité et pertinence des données d’entraînement du modèle IA par rapport aux
+données réelles de l’organisation. Possibilité d’un entraînement local (on-premise)
+pour adapter la solution au contexte spécifique du client.
+15
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+Conclusion générale et recommandations
+Points de convergence majeurs
+1. Incidents identiques : tous les interviewés, quel que soit leur secteur, font face à des
+incidents mixtes (techniques, humains, organisationnels) avec les mêmes problèmes
+récurrents : pics de trafic, erreurs de configuration, faux positifs.
+2. Adhésion à l’IA (6/6) : l’ensemble des professionnels perçoit positivement le recours
+à l’IA pour l’analyse du trafic réseau, notamment pour la détection en temps réel et
+le traitement des grands volumes de données.
+3. Supervision humaine maintenue : unanimité sur le maintien de la décision humaine finale. L’IA est un outil d’aide à la décision, non un décisionnaire autonome.
+4. Explicabilité non négociable (6/6) : comprendre pourquoi une anomalie est détectée est une exigence fondamentale pour tous.
+5. Freins communs : budget, résistance au changement, confidentialité des données et
+compatibilité avec l’existant sont les obstacles à l’adoption les plus cités.
+Recommandations pour la conception de la solution IA
+Sur la base des 6 entretiens, la solution IA idéale devrait répondre aux exigences
+suivantes :
+— Offrir une détection précise avec un faible taux de faux positifs
+— Fonctionner en mode semi-automatique (recommandation + validation humaine), avec évolution possible vers l’automatisation complète pour les menaces
+connues
+— Fournir des explications claires pour chaque alerte (indicateurs déclencheurs,
+niveau de confiance, écart par rapport à la norme)
+— Permettre la détection en temps réel et l’analyse continue du trafic
+— Générer automatiquement des rapports et assurer la traçabilité des événements
+16
+Synthèse des entretiens — Analyse du trafic réseau par IA ENSA Kénitra
+— S’intégrer facilement avec les outils existants (SIEM, pare-feu, supervision) via
+des API standard
+— Être déployable en local (on-premise) pour répondre aux exigences de confidentialité des données
+— Inclure une phase de calibration permettant l’adaptation au contexte spécifique
+de chaque organisation
+— Garantir la scalabilité face à la croissance des volumes de trafic
+— Prévoir des mécanismes de mise à jour continue du modèle face à l’évolution
+des menaces
+— Proposer une interface ergonomique avec tableaux de bord accessibles et rapports automatiques lisibles par un ingénieur réseau
+— Prévoir un accompagnement au changement et une formation adaptée pour
+les équipes
+— Garantir la conformité au RGPD et aux réglementations locales applicables
+— Offrir des modalités claires de support et de maintenance par le fournisseur
+— Proposer des arguments de ROI mesurables pour faciliter la justification budgétaire auprès de la direction
+Synthèse réalisée sur la base des entretiens N°1, 2, 3, 4, 5 et 6
+ENSA Kénitra — Projet Analyse du trafic réseau par IA — Année 2025–2026

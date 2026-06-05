@@ -9,6 +9,7 @@ let featuresData = null;
 let samplesData = null;
 let comparisonData = null;
 let edaData = null;
+let interviewsData = null;
 let pipelineInterval = null;
 
 /* ===== INIT ===== */
@@ -120,6 +121,7 @@ function initTabs() {
             if (tabId === 'features') renderFeaturesTab();
             if (tabId === 'samples') renderSamplesTab();
             if (tabId === 'comparison') renderComparisonTab();
+            if (tabId === 'interviews') renderInterviewsTab();
         });
     });
 }
@@ -159,7 +161,7 @@ function updateTimestamp() {
 
 /* ===== DATA LOADING ===== */
 async function loadAll() {
-    await Promise.allSettled([loadMetrics(), loadTree(), loadFeatures(), loadSamples(), loadComparison(), loadEDA()]);
+    await Promise.allSettled([loadMetrics(), loadTree(), loadFeatures(), loadSamples(), loadComparison(), loadEDA(), loadInterviews()]);
     updateTimestamp();
 }
 async function fetchJSON(url) {
@@ -306,6 +308,59 @@ function renderComparisonTab() {
         font: { color: '#78909c', size: 10 }, margin: { l: 40, r: 20, t: 10, b: 60 }, height: 250,
         xaxis: { showgrid: false, tickangle: -20 }, yaxis: { showgrid: true, gridcolor: '#1a2332', zeroline: false, title: 'Accuracy' },
     }, { displayModeBar: false, responsive: true });
+}
+
+/* ===== INTERVIEWS ===== */
+async function loadInterviews() { interviewsData = await fetchJSON('/api/interview-links'); }
+async function renderInterviewsTab() {
+    const el = document.getElementById('interviews-content');
+    let data = interviewsData;
+    if (!data || !data.requirements_to_implementation) {
+        el.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        data = await fetchJSON('/api/interview-links');
+        if (!data || !data.requirements_to_implementation) {
+            el.innerHTML = '<div class="empty-state">Données non disponibles. Vérifiez que le serveur est lancé.</div>';
+            return;
+        }
+        interviewsData = data;
+    }
+    let html = '<div class="info-box" style="margin-bottom:12px;">' +
+        '<strong>Projet :</strong> ' + esc(data.project) + '<br>' +
+        '<strong>Basé sur :</strong> ' + esc(data.based_on) + '</div>';
+    html += '<div class="toolbar"><span class="filter-count">Personnes interviewées</span></div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin:8px 0 16px;">' +
+        data.interviewees.map(p => '<div class="sample-card" style="padding:10px;border-left:3px solid var(--accent);"><i class="fas fa-user" style="color:var(--accent);margin-right:6px;"></i>' + esc(p) + '</div>').join('') +
+        '</div>';
+    html += '<div class="toolbar"><span class="filter-count">Correspondance Besoins → Implémentation</span></div>';
+    html += '<div class="comparison-grid"><div><table><thead><tr><th>Besoin exprimé (entretiens)</th><th>Implémentation dans le code</th></tr></thead><tbody>' +
+        data.requirements_to_implementation.map(r =>
+            '<tr><td><strong>' + esc(r.besoin) + '</strong></td><td>' + esc(r.implementation) + '</td></tr>'
+        ).join('') + '</tbody></table></div></div>';
+    html += '<div class="info-box" style="margin-top:12px;">' +
+        '<i class="fas fa-file-alt" style="margin-right:6px;"></i> ' +
+        'Synthèse complète : <a href="/Synthese_Entretiens_AI.txt" target="_blank" style="color:var(--accent);">Synthese_Entretiens_AI.txt</a></div>';
+    el.innerHTML = html;
+}
+async function showInterviewsModal() {
+    let data = interviewsData;
+    if (!data || !data.requirements_to_implementation) {
+        toast("Chargement des données entretiens...", "info");
+        data = await fetchJSON('/api/interview-links');
+        if (!data || !data.requirements_to_implementation) { toast("Erreur de chargement", "error"); return; }
+        interviewsData = data;
+    }
+    let html = '<div style="font-family:Inter,sans-serif;color:#78909c;">';
+    html += '<p><strong>Personnes interviewées :</strong></p><ul style="margin:0 0 16px;padding-left:20px;">' +
+        data.interviewees.map(p => '<li style="margin:2px 0;">' + esc(p) + '</li>').join('') + '</ul>';
+    html += '<p><strong>Correspondance Entretiens → Projet :</strong></p>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:0.72rem;"><thead><tr>' +
+        '<th style="text-align:left;border-bottom:1px solid #1a2332;padding:6px 8px;">Besoin</th>' +
+        '<th style="text-align:left;border-bottom:1px solid #1a2332;padding:6px 8px;">Implémentation</th></tr></thead><tbody>' +
+        data.requirements_to_implementation.map(r =>
+            '<tr><td style="padding:6px 8px;border-bottom:1px solid #0d1117;"><strong>' + esc(r.besoin) + '</strong></td>' +
+            '<td style="padding:6px 8px;border-bottom:1px solid #0d1117;">' + esc(r.implementation) + '</td></tr>'
+        ).join('') + '</tbody></table></div>';
+    showStyledModal('Entretiens — Conception du projet', html);
 }
 
 /* ==================================================================

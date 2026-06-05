@@ -121,6 +121,52 @@ def create_dashboard():
                 return jsonify(json.load(f))
         return jsonify({"models": []})
 
+    # ===== SERVE SYNTHESIS FILE =====
+    SYNTHESIS_PATH = str(BASE_DIR / "Synthese_Entretiens_AI.txt")
+
+    @app.route('/api/synthesis')
+    def api_synthesis():
+        if os.path.exists(SYNTHESIS_PATH):
+            with open(SYNTHESIS_PATH, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+        return jsonify({"error": "Synthesis file not found"}), 404
+
+    @app.route('/Synthese_Entretiens_AI.txt')
+    def serve_synthesis():
+        if os.path.exists(SYNTHESIS_PATH):
+            with open(SYNTHESIS_PATH, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+        return jsonify({"error": "Synthesis file not found"}), 404
+
+    # ===== INTERVIEW LINKS API =====
+    @app.route('/api/interview-links')
+    def api_interview_links():
+        return jsonify({
+            "project": "AI-Network-Intrusion-Detection",
+            "based_on": "6 entretiens professionnels — ENSA Kénitra 2025-2026",
+            "interviewees": [
+                "Dounia Haliloua — Analyste IT, Société Générale",
+                "Mohammed Kadri — Expert Technique .NET, CGI",
+                "Abdelkbir Rouaghbi — Admin infrastructure, Cour de cassation",
+                "Nawal Mekkaoui — Administratrice réseau, Cour de cassation",
+                "Saad Mekkaoui — Ingénieur réseau et sécurité",
+                "Assiya Akli — Administratrice réseau, Cour de cassation"
+            ],
+            "requirements_to_implementation": [
+                {"besoin": "Explicabilité (6/6)", "implementation": "Decision Tree max_depth=3, règles visibles via /api/tree, export_text()"},
+                {"besoin": "Faible taux de faux positifs (6/6)", "implementation": "class_weight='balanced', precision=73.8%, 298 FP seulement"},
+                {"besoin": "Aide à la décision humaine (6/6)", "implementation": "Mode recommandation, pas de blocage automatique"},
+                {"besoin": "Features simples et réseau (5/6)", "implementation": "sttl, sbytes, dbytes, Sload, Dload — 5 features seulement"},
+                {"besoin": "Intégration facile (5/6)", "implementation": "API REST Flask, endpoints JSON standards"},
+                {"besoin": "Détection temps réel (6/6)", "implementation": "Dashboard live, pipeline automatisé"},
+                {"besoin": "Rapports automatiques (E4, E5)", "implementation": "Export JSON + TXT, comparaison DT vs KNN"},
+                {"besoin": "Traçabilité et audit (E4, E5)", "implementation": "Résultats dans results/, règles exportables"}
+            ],
+            "synthesis_file": "Synthese_Entretiens_AI.txt"
+        })
+
     # ===== EDA API =====
     @app.route('/api/eda')
     def api_eda():
@@ -172,7 +218,7 @@ def create_dashboard():
             return jsonify(result)
         return jsonify(s)
 
-    print("Dashboard routes configured (6 model + 7 EDA + pipeline)")
+    print("Dashboard routes configured")
     return app
 
 if __name__ == "__main__":
